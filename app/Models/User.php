@@ -14,6 +14,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 class User extends Authenticatable
 {
     use HasFactory, Notifiable, HasRoles;
+ 
 
     /**
      * The attributes that are mass assignable.
@@ -54,6 +55,7 @@ class User extends Authenticatable
     public function courses()
     {
         return $this->hasMany(Course::class, 'course_students');
+      //  return $this->belongsToMany(Course::class, 'course_user');
     }
 
 

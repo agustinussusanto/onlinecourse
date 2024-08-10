@@ -11,17 +11,13 @@ use App\Http\Controllers\CourseVideoController;
 
 Route::get('/', [FrontController::class,'index'])->name('front.index');
 Route::get('/details/{course:slug}', [FrontController::class,'details'])->name('front.details');
-
 Route::get('/categories/{category:slug}', [FrontController::class,'category'])->name('front.category');
 Route::get('/pricing', [FrontController::class,'pricing'])->name('front.pricing');
 
-// Route::get('/',function(){
-//     return view('welcome');
-// });
 
 Route::get('/dashboard', function () {
     return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth'])->name('dashboard');
 
 
 
@@ -34,19 +30,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/learning/{course}/{courseVideoId}', [FrontController::class,'learning'])->name('front.learning')->middleware('role:student|teacher|owner');
 
     Route::prefix('admin')->name('admin.')->group(function () {
-      //  Route::resource('categories', CategoryController::class)->middleware('role:owner');
-        Route::resource('teachers', TeacherController::class)->middleware('role:owner');
-        Route::resource('courses', CourseController::class)->middleware('role:owner|teacher');
-        Route::resource('subscribe_transactions', SubscribeTransactionController::class)->middleware('role:owner');
-        Route::get('/add/video/{course}', [CourseVideoController::class, 'create'])->middleware('role:owner|teacher')->name('course.add_video');
-        Route::post('/add/video/save/{course}', [CourseVideoController::class, 'store'])->middleware('role:owner|teacher')->name('course.add_video.save');
-        Route::resource('course_videos', CourseVideoController::class)->middleware('role:owner|teacher');
-        Route::get('admin/categories/create', [CategoryController::class, 'create'])->middleware('role:owner');
-        Route::post('admin/categories/store', [CategoryController::class, 'store'])->middleware('role:owner');
-  
+        Route::resource('categories', CategoryController::class)->middleware('auth');
+        Route::resource('teachers', TeacherController::class)->middleware('auth');
+        Route::resource('courses', CourseController::class)->middleware('auth');
+        Route::resource('subscribe_transactions', SubscribeTransactionController::class)->middleware('auth');
+        Route::get('/add/video/{course:id}', [CourseVideoController::class, 'create'])->middleware('auth')->name('course.add_video');
+        Route::post('/add/video/save/{course:id}', [CourseVideoController::class, 'store'])->middleware('auth')->name('course.add_video.save');
+        Route::resource('course_videos', CourseVideoController::class)->middleware('auth');
+
     });
 
- });
+});
 
 
 require __DIR__.'/auth.php';

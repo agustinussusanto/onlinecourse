@@ -3,8 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Models\SubscribeTransaction;
+use App\Models\SubscribeTransaction; // Tambahkan ini
+
+
 
 class SubscribeTransactionController extends Controller
 {
@@ -14,6 +18,8 @@ class SubscribeTransactionController extends Controller
     public function index()
     {
         //
+        $transactions=SubscribeTransaction::with(['user'])->orderByDesc('id')->get();
+        return view('admin.transactions.index',compact('transactions'));
     }
 
     /**
@@ -35,10 +41,9 @@ class SubscribeTransactionController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($id)
+    public function show(SubscribeTransaction $subscribeTransaction )
     {
-        $subscribeTransaction = SubscribeTransaction::find($id);
-        return response()->json($subscribeTransaction);
+        return view ('admin.transactions.show',compact('subscribeTransaction'));
     }
 
     /**
@@ -53,12 +58,17 @@ class SubscribeTransactionController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, SubscribeTransaction $subscribeTransaction)
     {
-        $subscribeTransaction = SubscribeTransaction::find($id);
-        // Update data based on the request
-        $subscribeTransaction->update($request->all());
-        return response()->json($subscribeTransaction);
+        DB::transaction(function () use($subscribeTransaction) {
+            $subscribeTransaction->update(
+                [
+                    'is_paid' =>true,
+                    'subscription_start_date' => Carbon::now()
+                ]);
+
+    });
+    return redirect()->route('admin.subscribe_transactions.show', $subscribeTransaction);
     }
 
     /**

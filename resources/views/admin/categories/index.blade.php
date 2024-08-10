@@ -4,7 +4,7 @@
             <h2 class="text-xl font-semibold leading-tight text-gray-800">
                 {{ __('Manage Categories') }}
             </h2>
-            <a href="{{ route('admin.categories.create') }}" class="px-6 py-4 font-bold text-white bg-indigo-700 rounded-full">
+            <a href="{{route('admin.categories.create')}}" class="px-6 py-4 font-bold text-white bg-indigo-700 rounded-full">
                 Add New
             </a>
         </div>
@@ -27,15 +27,16 @@
                         <h3 class="text-xl font-bold text-indigo-950">{{ $category->created_at }}</h3>
                     </div>
                     <div class="hidden flex-row gap-x-3 items-center md:flex">
-                        <a href="#" class="px-6 py-4 font-bold text-white bg-indigo-700 rounded-full">
+                        <a href="{{route('admin.categories.edit', $category)}}" class="px-6 py-4 font-bold text-white bg-indigo-700 rounded-full">
                             Edit
                         </a>
-                        <form action="#" method="POST">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="px-6 py-4 font-bold text-white bg-red-700 rounded-full">
-                                Delete
-                            </button>
+                        <form action="{{ route('admin.categories.destroy', $category) }}" method="POST">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="px-6 py-4 font-bold text-white bg-red-700 rounded-full">
+                                    Delete
+                                </button>
+
                         </form>
                     </div>
                 </div>
