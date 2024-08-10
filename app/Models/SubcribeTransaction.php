@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class SubcribeTransaction extends Model
+class SubscribeTransaction extends Model
 {
     use HasFactory, SoftDeletes;
     protected $fillable = [
@@ -14,13 +14,13 @@ class SubcribeTransaction extends Model
         'is_paid',
         'user_id',
         'proof',
-        'subcription_start_date',
-        
+        'subscription_start_date',
+
     ];
 
 
     public function user()
     {
         return $this->belongsTo(User::class);
-    }   
+    }
 }

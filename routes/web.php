@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FrontController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CourseController;
-use App\Http\Controllers\SubscribeTransationController;
+use App\Http\Controllers\SubscribeTransactionController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\CourseVideoController;
 
@@ -31,19 +31,21 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/checkout', [FrontController::class,'checkout'])->name('front.checkout')->middleware('role:student');
     Route::post('/checkout/store', [FrontController::class,'checkout_store'])->name('front.checkout_store')->middleware('role:student');
-     Route::get('/learning/{course}/{courseVideoId}', [FrontController::class,'learning'])->name('front.learning')->middleware('role:student|teacher|owner');
-  
+    Route::get('/learning/{course}/{courseVideoId}', [FrontController::class,'learning'])->name('front.learning')->middleware('role:student|teacher|owner');
+
     Route::prefix('admin')->name('admin.')->group(function () {
-        Route::resource('categories', CategoryController::class)->middleware('role:owner');
+      //  Route::resource('categories', CategoryController::class)->middleware('role:owner');
         Route::resource('teachers', TeacherController::class)->middleware('role:owner');
         Route::resource('courses', CourseController::class)->middleware('role:owner|teacher');
-        Route::resource('subscribe_transactions', SubscribeTransationController::class)->middleware('role:owner');
+        Route::resource('subscribe_transactions', SubscribeTransactionController::class)->middleware('role:owner');
         Route::get('/add/video/{course}', [CourseVideoController::class, 'create'])->middleware('role:owner|teacher')->name('course.add_video');
         Route::post('/add/video/save/{course}', [CourseVideoController::class, 'store'])->middleware('role:owner|teacher')->name('course.add_video.save');
         Route::resource('course_videos', CourseVideoController::class)->middleware('role:owner|teacher');
-   
-    });
+        Route::get('admin/categories/create', [CategoryController::class, 'create'])->middleware('role:owner');
+        Route::post('admin/categories/store', [CategoryController::class, 'store'])->middleware('role:owner');
   
+    });
+
  });
 
 

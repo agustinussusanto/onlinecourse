@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
-
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
@@ -14,11 +15,9 @@ class CategoryController extends Controller
      */
     public function index()
     {
-     // Kode untuk menampilkan daftar resource
-
         $categories = Category::orderByDesc('id')->get();
         return view('admin.categories.index', compact('categories'));
-          }
+    }
 
     /**
      * Show the form for creating a new resource.
@@ -34,11 +33,24 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => ['required','string','max:255'],
-          
-            'icon' => ['required','image','mimes:jpeg,png,jpg,gif,svg'],
+            'name' => ['required', 'string', 'max:255'],
+            'icon' => ['required', 'image', 'mimes:jpeg,png,jpg,gif,svg'],
         ]);
-       // DB::transaction(function()use( $validated))
+
+        DB::transaction(function () use ($validated, $request) {
+            if ($request->hasFile('icon')) {
+                $iconPath = $request->file('icon')->store('icons','public');
+                $validated['icon'] = $iconPath;
+            } else {
+                $iconPath = 'images/icon-default.png';
+               
+            }
+            $validated['slug'] = Str::slug($validated['name']);
+
+            $category = Category::create($validated);
+        });
+
+        return redirect()->route('admin.categories.index');
     }
 
     /**
