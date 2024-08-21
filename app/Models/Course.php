@@ -13,7 +13,7 @@ class Course extends Model
         'name',
         'slug',
         'path_trailer',
-     
+        'about',
         'thumbnail',
         'teacher_id',
         'category_id',
@@ -30,7 +30,7 @@ class Course extends Model
         return $this->belongsTo(Teacher::class);
     }
 
-    public function courseVideos()
+    public function course_Videos()
     {
         return $this->hasMany(CourseVideo::class);
     }
@@ -47,6 +47,7 @@ class Course extends Model
 
     public function students()
     {
-        return $this->hasMany(User::class, 'course_students');
+        return $this->belongsToMany(Course::class, 'course_students');
     }
+
 }

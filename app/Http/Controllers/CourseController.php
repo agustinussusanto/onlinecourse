@@ -3,7 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\Teacher;
+use App\Models\Category;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\StoreCourseRequest;
+use App\Http\Requests\UpdateCourseRequest;
 
 class CourseController extends Controller
 {
@@ -12,7 +22,24 @@ class CourseController extends Controller
      */
     public function index()
     {
-        //
+    if (Auth::check())
+        {
+            $user = Auth::user();
+            $query = Course::with(['category', 'teacher', 'students'])->orderByDesc('id');
+
+            if ($user->hasRole('teacher'))
+            {
+                $query->whereHas('teacher', function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                });
+            }
+
+            $courses = $query->paginate(10);
+
+            return view('admin.courses.index', compact('courses'));
+        } else {
+            return redirect()->route('login'); // Redirect to login if user is not authenticated
+        }
     }
 
     /**
@@ -20,23 +47,53 @@ class CourseController extends Controller
      */
     public function create()
     {
-        //
+        $categories = Category::all();
+        return view('admin.courses.create', compact('categories'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreCourseRequest $request)
     {
-        //
+    $teacher = Teacher::where('user_id', Auth::user()->id)->first();
+    if (!$teacher) {
+        return redirect()->route('admin.courses.index')->withErrors('Unauthorized or invalid teacher');
     }
+   // dd($request->all());
+    DB::transaction(function () use ($request, $teacher) {
+        $validated = $request->validated();
+          // Debug: Log data yang telah divalidasi
+          Log::info('Validated data:', $validated);
+          //dd($validated);
+        if ($request->hasFile('thumbnail')) {
+            $thumbnailPath = $request->file('thumbnail')->store('thumbnails', 'public');
+            $validated['thumbnail'] = $thumbnailPath;
+        }
+        $validated['slug'] = Str::slug($validated['name']);
+        $validated['teacher_id'] = $teacher->id;
 
+        $course = Course::create($validated);
+        Log::info('Course created:', $course->toArray());
+        if (!empty($validated['course_keypoints'])) {
+            $course->courseKeypoints()->delete(); // Ganti 'deleted()' dengan 'delete()'
+            foreach ($validated['course_keypoints'] as $keypointText) {
+                $course->courseKeypoints()->create([
+                    'name' => $keypointText,
+                ]);
+            }
+        }
+    });
+
+    return redirect()->route('admin.courses.index')->with('success', 'Course created successfully.');
+}
     /**
      * Display the specified resource.
      */
     public function show(Course $course)
     {
-        //
+        $categories = Category::all();
+        return view('admin.courses.show', compact('course'));
     }
 
     /**
@@ -44,15 +101,36 @@ class CourseController extends Controller
      */
     public function edit(Course $course)
     {
-        //
+        $categories = Category::all();
+        return view('admin.courses.edit', compact('course', 'categories'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Course $course)
+    public function update(UpdateCourseRequest $request, Course $course)
     {
-        //
+        DB::transaction(function () use ($request, $course) {
+            $validated = $request->validated();
+            if ($request->hasFile('thumbnail')) {
+                $thumbnailPath = $request->file('thumbnail')->store('thumbnails', 'public');
+                $validated['thumbnail'] = $thumbnailPath;
+            }
+            $validated['slug'] = Str::slug($validated['name']);
+            $validated['about'] = $request->input('about');
+
+            $course->update($validated);
+            if (!empty($validated['course_keypoints'])) {
+                $course->courseKeypoints()->delete(); // Ganti 'deleted()' dengan 'delete()'
+                foreach ($validated['course_keypoints'] as $keypointText) {
+                    $course->courseKeypoints()->create([
+                        'name' => $keypointText,
+                    ]);
+                }
+            }
+        });
+
+        return redirect()->route('admin.courses.show', $course);
     }
 
     /**
@@ -60,6 +138,14 @@ class CourseController extends Controller
      */
     public function destroy(Course $course)
     {
-        //
+        DB::beginTransaction();
+        try {
+            $course->delete();
+            DB::commit();
+            return redirect()->route('admin.courses.index');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('admin.courses.index')->with('error', 'Something went wrong');
+        }
     }
 }

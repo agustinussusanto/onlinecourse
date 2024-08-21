@@ -4,8 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-// Suggested code may be subject to a license. Learn more: ~LicenseLog:1025820506.
-use illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\SoftDeletes; // Correct namespace
 
 class CourseVideo extends Model
 {
@@ -15,11 +14,11 @@ class CourseVideo extends Model
         'name',
         'path_video',
         'course_id',
-    ];  
+    ];
 
     function course()
     {
         return $this->belongsTo(Course::class);
-    }           
+    }
 
 }
